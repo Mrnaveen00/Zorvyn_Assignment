@@ -1,0 +1,488 @@
+openapi: 3.0.3
+info:
+  title: Finance Dashboard Backend API
+  version: 1.0.0
+  description: |
+    Backend for an organization-level finance dashboard with RBAC, financial records,
+    and summary analytics.
+servers:
+  - url: http://localhost:4000/api
+tags:
+  - name: Auth
+  - name: Users
+  - name: Records
+  - name: Dashboard
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: admin@companyx.com
+        password:
+          type: string
+          example: Admin@123
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [VIEWER, ANALYST, ADMIN]
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    CreateUserRequest:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+          example: Finance Manager
+        email:
+          type: string
+          example: manager@companyx.com
+        password:
+          type: string
+          example: SecurePass123
+        role:
+          type: string
+          enum: [VIEWER, ANALYST, ADMIN]
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [VIEWER, ANALYST, ADMIN]
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+    UpdateUserStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+    FinancialRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          example: 9999.5
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        category:
+          type: string
+          example: Travel
+        recordDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateRecordRequest:
+      type: object
+      required: [amount, type, category, recordDate]
+      properties:
+        amount:
+          type: number
+          example: 9999.5
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        category:
+          type: string
+          example: Travel
+        recordDate:
+          type: string
+          example: 2026-04-03
+        notes:
+          type: string
+          example: Client visit travel booking
+    UpdateRecordRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        category:
+          type: string
+        recordDate:
+          type: string
+        notes:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [Auth]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: API is running
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [VIEWER, ANALYST, ADMIN]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE]
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users fetched
+    post:
+      tags: [Users]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User fetched
+    patch:
+      tags: [Users]
+      summary: Update user fields
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+    delete:
+      tags: [Users]
+      summary: Delete user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+  /users/{id}/status:
+    patch:
+      tags: [Users]
+      summary: Update user status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequest'
+      responses:
+        '200':
+          description: User status updated
+  /records:
+    get:
+      tags: [Records]
+      summary: List financial records
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [INCOME, EXPENSE]
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Records fetched
+    post:
+      tags: [Records]
+      summary: Create financial record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecordRequest'
+      responses:
+        '201':
+          description: Record created
+  /records/{id}:
+    get:
+      tags: [Records]
+      summary: Get financial record by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Record fetched
+    patch:
+      tags: [Records]
+      summary: Update financial record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecordRequest'
+      responses:
+        '200':
+          description: Record updated
+    delete:
+      tags: [Records]
+      summary: Delete financial record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Record deleted
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Get top-level dashboard summary
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Summary fetched
+  /dashboard/category-breakdown:
+    get:
+      tags: [Dashboard]
+      summary: Get grouped totals by category and type
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Category breakdown fetched
+  /dashboard/recent-activity:
+    get:
+      tags: [Dashboard]
+      summary: Get recent finance activity
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Recent activity fetched
+  /dashboard/trends:
+    get:
+      tags: [Dashboard]
+      summary: Get weekly or monthly trends
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum: [monthly, weekly]
+            default: monthly
+      responses:
+        '200':
+          description: Trends fetched
