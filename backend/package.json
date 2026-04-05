@@ -6,16 +6,17 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc --project tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "npm run db:prepare && node dist/server.js",
+    "db:prepare": "node ./scripts/prepare-db.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed": "node ./scripts/seed.mjs",
     "prisma:studio": "prisma studio",
     "test": "echo \"Tests will be added in a later step\""
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "node ./scripts/seed.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import bcrypt from "bcryptjs";
 import { PrismaClient, RecordType, UserRole, UserStatus } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import pg from "pg";
 
 const connectionPool = new pg.Pool({
@@ -15,7 +15,7 @@ const prisma = new PrismaClient({
   adapter,
 });
 
-async function main() {
+export async function seedDatabase() {
   const passwordHash = await bcrypt.hash("Admin@123", 10);
 
   const admin = await prisma.user.upsert({
@@ -75,7 +75,7 @@ async function main() {
     await prisma.financialRecord.createMany({
       data: [
         {
-          amount: 120000.0,
+          amount: 120000,
           type: RecordType.INCOME,
           category: "Client Payment",
           recordDate: new Date("2026-03-01"),
@@ -84,7 +84,7 @@ async function main() {
           updatedById: admin.id,
         },
         {
-          amount: 18000.0,
+          amount: 18000,
           type: RecordType.EXPENSE,
           category: "Office Rent",
           recordDate: new Date("2026-03-03"),
@@ -93,7 +93,7 @@ async function main() {
           updatedById: admin.id,
         },
         {
-          amount: 8500.0,
+          amount: 8500,
           type: RecordType.EXPENSE,
           category: "Software",
           recordDate: new Date("2026-03-08"),
@@ -102,7 +102,7 @@ async function main() {
           updatedById: admin.id,
         },
         {
-          amount: 45000.0,
+          amount: 45000,
           type: RecordType.INCOME,
           category: "Consulting",
           recordDate: new Date("2026-03-15"),
@@ -111,7 +111,7 @@ async function main() {
           updatedById: admin.id,
         },
         {
-          amount: 6200.0,
+          amount: 6200,
           type: RecordType.EXPENSE,
           category: "Utilities",
           recordDate: new Date("2026-03-17"),
@@ -126,6 +126,10 @@ async function main() {
   console.log("Seed data is ready.");
 }
 
+async function main() {
+  await seedDatabase();
+}
+
 main()
   .catch((error) => {
     console.error("Seeding failed:", error);
@@ -133,4 +137,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await connectionPool.end();
   });
