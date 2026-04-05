@@ -2,6 +2,22 @@
 
 A backend assignment project for an organization-level finance dashboard with role-based access control, financial record management, and summary analytics.
 
+## Live Links
+
+- Frontend Demo: `https://zorvyn-frontend-q8so.onrender.com`
+- Backend API Health: `https://zorvyn-backend-7ixs.onrender.com/api/health`
+- Backend Swagger Docs: `https://zorvyn-backend-7ixs.onrender.com/api/docs/`
+
+## Deployment Summary
+
+- Frontend hosted on Render Static Site
+- Backend hosted on Render Web Service
+- PostgreSQL hosted on Render Postgres
+
+Note:
+
+- Database connection URLs are intentionally not included in this README because they contain credentials and should remain private.
+
 ## Project Structure
 
 ```text
